@@ -1,0 +1,47 @@
+[project]
+name = "surface-nodes"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "apax>=0.10.2",
+    "ipsuite>=0.2.4",
+    "mace-torch>=0.3.12",
+    "plumed>=2.9.0",
+]
+
+[project.optional-dependencies]
+apax_cuda = ["apax[cuda]"]
+
+[dependency-groups]
+dev = [
+    "coverage>=7.6.10",
+    "pre-commit>=4.0.1",
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+]
+lint = [
+    "ruff>=0.9.1",
+]
+
+[tool.ruff]
+line-length = 90
+
+[tool.ruff.lint]
+select = ["E", "F", "C", "I", "E"]
+
+[tool.coverage.run]
+branch = true
+source = ["nodes"]
+
+[tool.coverage.html]
+directory = "coverage_html_report"
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: mark a test as slow and should only run explicitly"
+]
