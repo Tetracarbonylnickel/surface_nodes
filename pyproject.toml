@@ -1,17 +1,17 @@
 [project]
-name = "surface-nodes"
+name = "surfnodes"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "ipsuite>=0.2.4",
-    "mace-torch>=0.3.12",
-    "plumed>=2.9.0",
 ]
 
 [project.optional-dependencies]
 apax_cuda = ["apax[cuda]"]
+mace = ["mace-torch>=0.3.12",]
+plumed = ["plumed>=2.9.0"]
 
 [dependency-groups]
 dev = [

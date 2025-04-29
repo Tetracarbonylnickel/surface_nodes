@@ -1,5 +1,3 @@
-"""The ipsuite package."""
-
 import lazy_loader as lazy
 from ipsuite.utils.helpers import setup_ase
 from ipsuite.utils.logs import setup_logging
