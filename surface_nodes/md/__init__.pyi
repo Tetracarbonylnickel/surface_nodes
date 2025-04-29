@@ -1,5 +1,3 @@
-"""Module for generating new configurations based on smiles."""
-
 from .constrains import (
     FixedAtomsConstraint,
 )
