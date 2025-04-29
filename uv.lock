@@ -3064,7 +3064,6 @@ name = "surface-nodes"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "apax" },
     { name = "ipsuite" },
     { name = "mace-torch" },
     { name = "plumed" },
@@ -3088,7 +3087,6 @@ lint = [
 
 [package.metadata]
 requires-dist = [
-    { name = "apax", specifier = ">=0.10.2" },
     { name = "apax", extras = ["cuda"], marker = "extra == 'apax-cuda'" },
     { name = "ipsuite", specifier = ">=0.2.4" },
     { name = "mace-torch", specifier = ">=0.3.12" },

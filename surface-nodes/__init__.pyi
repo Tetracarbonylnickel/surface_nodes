@@ -1,24 +1,28 @@
+from .calculators import CP2KSinglePoint, MaceCalc, PlumedCalc
 from .configuration_modification import (
     ModFrames,
+    PosVeloRotation,
     SurfaceRasterMetrics,
     SurfaceRasterScan,
-    PosVeloRotation,
 )
-
-from .calculators import MaceCalc, PlumedCalc
-
+from .frame_filter import PropertyFilter
+from .md import FixedAtomsConstraint
+from .version import __version__
 
 # Update __all__ for lazy loading
 __all__ = [
     "__version__",
-    
-    #Calculators
+    # Calculators
     "MaceCalc",
     "PlumedCalc",
-    
-    #Structure Modification
+    "CP2KSinglePoint",
+    # Structure Modification
     "ModFrames",
     "SurfaceRasterScan",
     "SurfaceRasterMetrics",
     "PosVeloRotation",
+    # Filter
+    "PropertyFilter",
+    # MD
+    "FixedAtomsConstraint",
 ]

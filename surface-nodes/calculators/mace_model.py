@@ -1,11 +1,12 @@
-from mace.calculators import mace_mp
 import dataclasses
 import typing
+
 from ase.calculators.calculator import Calculator
+from mace.calculators import mace_mp
+
 
 @dataclasses.dataclass
 class MaceCalc:
-
     kwargs: dict[str, typing.Any] | None = None
     device: typing.Literal["cpu", "cuda"] | None = None
 
