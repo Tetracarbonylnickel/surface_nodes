@@ -249,7 +249,6 @@ class PosVeloRotation(base.ProcessSingleAtom):
     cell_fraction: typing.List[float] = zntrack.params()  # [1, 1]
     impact_position: typing.List[float] = zntrack.params(None)  # np.array([0., 0.])
     seed: int = zntrack.params(42)
-    # output_file: str = zntrack.outs_path(zntrack.nwd / "frames.h5")
 
     def run(self) -> None:
         np.random.seed(self.seed)
@@ -257,13 +256,10 @@ class PosVeloRotation(base.ProcessSingleAtom):
         self.z_rotation_angles = np.array(self.z_rotation_angles)
         self.velocitie = np.array(self.velocitie)
 
-        # db = znh5md.IO(self.output_file)
-
         atoms = self.get_data()
         cell = atoms.cell
         cellpar = cell.cellpar()
 
-        z_max = max(atoms.get_positions()[:, 2])
         if cellpar[2] < self.additive_hight + 10:
             cellpar[2] = self.additive_hight + 10
             new_cell = Cell.fromcellpar(cellpar)
@@ -319,8 +315,8 @@ class PosVeloRotation(base.ProcessSingleAtom):
                             rot_pos, rot_velo, z_angle, "z"
                         )
 
-                        final_pos = rot_pos_z + np.array(
-                            [xy_impact_pos[0], xy_impact_pos[1], z_max]
+                        final_pos = np.array([rot_pos_z[0], rot_pos_z[1], self.additive_hight]) + np.array(
+                            [xy_impact_pos[0], xy_impact_pos[1], 0]
                         )
                         additive = ase.Atoms(
                             self.symbol,
@@ -329,14 +325,8 @@ class PosVeloRotation(base.ProcessSingleAtom):
                         )
                         structures[-1].extend(additive)
 
-        # db.extend(structures)
         self.frames = structures
 
-    # @property
-    # def frames(self) -> typing.List[ase.Atoms]:
-    #     with self.state.fs.open(self.output_file, "rb") as f:
-    #         with h5py.File(f) as file:
-    #             return znh5md.IO(file_handle=file)[:]
 
 
 def delete_reflected_atoms(atoms, cutoff_plane):
@@ -371,8 +361,24 @@ def delete_reflected_atoms(atoms, cutoff_plane):
     return frames
 
 
+def filter_no_neighbor_structures(frames):
+    new_frames = []
+    for frame in frames:
+        if np.any(frame.calc.results(['forces_uncertainties']) > 1e-4):
+            new_frames.append(frame)
+        
+    return new_frames
+
+def map_atoms(frames):
+    for frame in frames:
+        frame.wrap()
+        
+    return frames
+
 MODS = {
     "del-reflected-atoms": delete_reflected_atoms,
+    "filter-no-neighbor-structures": filter_no_neighbor_structures,
+    "map-atoms-to-box": map_atoms,
 }
 
 
