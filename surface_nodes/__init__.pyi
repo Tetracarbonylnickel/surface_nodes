@@ -5,7 +5,7 @@ from .configuration_modification import (
     SurfaceRasterMetrics,
     SurfaceRasterScan,
 )
-from .frame_filter import PropertyFilter
+from .frame_filter import PropertyFilter, NoNeighborFilter
 from .md import FixedAtomsConstraint
 from .version import __version__
 
@@ -23,6 +23,7 @@ __all__ = [
     "PosVeloRotation",
     # Filter
     "PropertyFilter",
+    "NoNeighborFilter"
     # MD
     "FixedAtomsConstraint",
 ]

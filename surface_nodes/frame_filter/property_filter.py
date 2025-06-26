@@ -4,16 +4,20 @@ import ase
 import matplotlib.pyplot as plt
 import numpy as np
 import zntrack
-from ipsuite import base
-
+from ipsuite import base, models
+import tqdm
 
 def mean_reduction(values, axis):
-    return np.mean(values, axis=axis)
-
+    return np.nanmean(values, axis=tuple(axis))
 
 def max_reduction(values, axis):
-    return np.max(values, axis=axis)
+    return np.nanmax(values, axis=tuple(axis))
 
+def min_reduction(values, axis):
+    return np.nanmin(values, axis=tuple(axis))
+
+def flatten_r(values, axis):
+    return values.flatten()
 
 def check_dimension(values):
     if values.ndim > 1:
@@ -27,6 +31,8 @@ def check_dimension(values):
 REDUCTIONS = {
     "mean": mean_reduction,
     "max": max_reduction,
+    'min': min_reduction,
+    'flatten': flatten_r,
 }
 
 
@@ -38,7 +44,7 @@ class PropertyFilter(base.IPSNode):
     n_configurations: int = zntrack.params(None)
     min_distance: int = zntrack.params(1)
     dim_reduction: str = zntrack.params(None)
-    reduction_axis: t.List[int] = zntrack.params((1, 2))
+    reduction_axis: tuple[int, ...] = zntrack.params(None)#(1, 2))
 
     filtered_indices: list = zntrack.outs()
     selection_plot: str = zntrack.outs_path(zntrack.nwd / "slecection.png")
@@ -50,25 +56,29 @@ class PropertyFilter(base.IPSNode):
         return super()._post_init_()
 
     def pad_list(self, inputs):
-        max_rows = max(val.shape[0] for val in inputs)
+        
+        if self.reduction_axis:
+            max_rows = max(val.shape[0] for val in inputs)
 
-        # Ensure all arrays are (N, 3)
-        padded_list = []
-        for arr in inputs:
-            pad_rows = max_rows - arr.shape[0]
-            if pad_rows > 0:
-                # Pad with the given value along axis 0
-                padding = np.full((pad_rows, 3), 0)
-                padded_arr = np.vstack([arr, padding])
-            else:
-                padded_arr = arr  # Already the max size
-            padded_list.append(padded_arr)
-        return np.array(padded_list)
+            # Ensure all arrays are (N, 3)
+            padded_list = []
+            for arr in inputs:
+                pad_rows = max_rows - arr.shape[0]
+                if pad_rows > 0:
+                    # Pad with the given value along axis 0
+                    padding = np.full((pad_rows, 3), np.NAN)
+                    padded_arr = np.vstack([arr, padding])
+                else:
+                    padded_arr = arr  # Already the max size
+                padded_list.append(padded_arr)
+            return np.array(padded_list)
+        else:
+            return np.array(inputs)
 
     def run(self) -> t.List[int]:
-        self.reduction_axis = tuple(self.reduction_axis)
         values = [atoms.calc.results[self.reference] for atoms in self.data]
         values = self.pad_list(values)
+            
         print(values.shape)
         if self.dim_reduction is not None:
             reduction_fn = REDUCTIONS[self.dim_reduction]
@@ -145,6 +155,51 @@ class PropertyFilter(base.IPSNode):
             selection[id] = int(val)
         return selection
 
+    @property
+    def frames(self) -> list[ase.Atoms]:
+        return [
+            self.data[i] for i in range(len(self.data)) if i not in self.filtered_indices
+        ]
+
+    @property
+    def excluded_frames(self):
+        if self.outlier:
+            return [self.data[i] for i in self.filtered_indices]
+        else:
+            return []
+
+
+
+class NoNeighborFilter(base.IPSNode):
+    data: list[ase.Atoms] = zntrack.deps()
+    model: models.MLModel = zntrack.deps(None)
+    
+    filtered_indices: list = zntrack.outs()
+    
+    def run(self):
+        
+        filtered_indices = []
+        if self.model:
+            idx = 0
+            calc = self.model.get_calculator()
+
+            for configuration in tqdm.tqdm(self.data, ncols=70):
+                configuration: ase.Atoms
+                # Run calculation
+                atoms = configuration.copy()
+                atoms.calc = calc
+                atoms.get_potential_energy()
+                if np.any(atoms.calc.results['forces_uncertainty'] < 1e-4):
+                    filtered_indices.append(idx)
+                idx += 1
+        else:
+            for idx, frame in enumerate(self.data):
+                if np.any(frame.calc.results['forces_uncertainty'] < 1e-4):
+                    filtered_indices.append(idx)
+            
+        self.filtered_indices = filtered_indices
+        
+        
     @property
     def frames(self) -> list[ase.Atoms]:
         return [

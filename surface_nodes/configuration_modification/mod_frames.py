@@ -330,6 +330,7 @@ class PosVeloRotation(base.ProcessSingleAtom):
 
 
 def delete_reflected_atoms(atoms, cutoff_plane):
+    atoms = atoms[-1]
     frames = [freeze_copy_atoms(atoms)]
     z_pos = atoms.positions[:, 2]
     idxs = np.where(z_pos > cutoff_plane)[0]
@@ -364,7 +365,7 @@ def delete_reflected_atoms(atoms, cutoff_plane):
 def filter_no_neighbor_structures(frames):
     new_frames = []
     for frame in frames:
-        if np.any(frame.calc.results(['forces_uncertainties']) > 1e-4):
+        if np.any(frame.calc.results['forces_uncertainty'] > 1e-4):
             new_frames.append(frame)
         
     return new_frames
@@ -382,7 +383,7 @@ MODS = {
 }
 
 
-class ModFrames(base.ProcessSingleAtom):
+class ModFrames(base.ProcessAtoms):
     moddification: str = zntrack.params()
     run_kwargs: dict = zntrack.params()
 
