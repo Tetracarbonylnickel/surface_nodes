@@ -1,4 +1,4 @@
-from utils import PlotProperties, SafeSelection
+from .utils import PlotProperties, SafeSelection
 
 from .calculators import CP2KSinglePoint, MaceCalc, PlumedCalc
 from .configuration_modification import (
