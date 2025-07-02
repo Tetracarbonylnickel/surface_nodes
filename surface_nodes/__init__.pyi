@@ -1,3 +1,5 @@
+from utils import PlotProperties, SafeSelection
+
 from .calculators import CP2KSinglePoint, MaceCalc, PlumedCalc
 from .configuration_modification import (
     ModFrames,
@@ -5,7 +7,7 @@ from .configuration_modification import (
     SurfaceRasterMetrics,
     SurfaceRasterScan,
 )
-from .frame_filter import PropertyFilter, NoNeighborFilter
+from .frame_filter import NoNeighborFilter, PropertyFilter
 from .md import FixedAtomsConstraint
 from .version import __version__
 
@@ -23,7 +25,10 @@ __all__ = [
     "PosVeloRotation",
     # Filter
     "PropertyFilter",
-    "NoNeighborFilter"
+    "NoNeighborFilter",
     # MD
     "FixedAtomsConstraint",
+    #Utils
+    "PlotProperties",
+    "SafeSelection",
 ]

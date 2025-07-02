@@ -3,37 +3,11 @@ import typing as t
 import ase
 import matplotlib.pyplot as plt
 import numpy as np
+import tqdm
 import zntrack
 from ipsuite import base, models
-import tqdm
 
-def mean_reduction(values, axis):
-    return np.nanmean(values, axis=tuple(axis))
-
-def max_reduction(values, axis):
-    return np.nanmax(values, axis=tuple(axis))
-
-def min_reduction(values, axis):
-    return np.nanmin(values, axis=tuple(axis))
-
-def flatten_r(values, axis):
-    return values.flatten()
-
-def check_dimension(values):
-    if values.ndim > 1:
-        raise ValueError(
-            f"Value dimension is {values.ndim} != 1. "
-            "Reduce the dimension by defining dim_reduction, "
-            "use mean or max to get (n_structures,) shape."
-        )
-
-
-REDUCTIONS = {
-    "mean": mean_reduction,
-    "max": max_reduction,
-    'min': min_reduction,
-    'flatten': flatten_r,
-}
+import surface_nodes.utils as utils
 
 
 class PropertyFilter(base.IPSNode):
@@ -66,7 +40,7 @@ class PropertyFilter(base.IPSNode):
                 pad_rows = max_rows - arr.shape[0]
                 if pad_rows > 0:
                     # Pad with the given value along axis 0
-                    padding = np.full((pad_rows, 3), np.NAN)
+                    padding = np.full((pad_rows, 3), np.nan)
                     padded_arr = np.vstack([arr, padding])
                 else:
                     padded_arr = arr  # Already the max size
@@ -81,10 +55,10 @@ class PropertyFilter(base.IPSNode):
             
         print(values.shape)
         if self.dim_reduction is not None:
-            reduction_fn = REDUCTIONS[self.dim_reduction]
+            reduction_fn = utils.REDUCTIONS[self.dim_reduction]
             values = reduction_fn(values, self.reduction_axis)
 
-        check_dimension(values)
+        utils.check_dimension(values)
 
         lower_limit, upper_limit = self.cutoffs[0], self.cutoffs[1]
         self.outlier = True
@@ -116,7 +90,7 @@ class PropertyFilter(base.IPSNode):
             values = self.pad_list(values)
 
             if self.dim_reduction is not None:
-                reduction_fn = REDUCTIONS[self.dim_reduction]
+                reduction_fn = utils.REDUCTIONS[self.dim_reduction]
                 values = reduction_fn(values, self.reduction_axis)
 
             fig, ax = plt.subplots()
@@ -212,3 +186,4 @@ class NoNeighborFilter(base.IPSNode):
             return [self.data[i] for i in self.filtered_indices]
         else:
             return []
+

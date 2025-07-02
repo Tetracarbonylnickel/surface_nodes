@@ -1,6 +1,6 @@
 from .property_filter import (
-    PropertyFilter,
     NoNeighborFilter,
+    PropertyFilter,
 )
 
 __all__ = [
