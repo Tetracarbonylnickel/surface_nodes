@@ -385,7 +385,7 @@ MODS = {
 
 class ModFrames(base.ProcessAtoms):
     moddification: str = zntrack.params()
-    run_kwargs: dict = zntrack.params({})
+    run_kwargs: dict = zntrack.params()
 
     def run(self) -> None:
         atoms = self.get_data()
