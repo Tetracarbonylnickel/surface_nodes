@@ -237,14 +237,53 @@ def position_velocitie_rotation(pos, velo, angle_degrees, rot_axis):
     return rotated_pos, rotate_velo
 
 
-class PosVeloRotation(base.ProcessSingleAtom):
-    """This class generates"""
+class AddImpactingAtom(base.ProcessSingleAtom):
+    """
+    Generate a series of atomic configurations by adding a single impacting atom 
+    to an existing structure with specific initial velocity, angular orientation, 
+    and positional variation.
+
+    Attributes:
+    -----------
+    symbol : str
+        The atomic symbol of the impacting atom (e.g., "H", "Ar").
+    
+    incoming_angel : List[float]
+        A list of angles (in degrees) bewteen the velocety vector of the impacting particle and
+        the normal vector of the surface.
+    
+    z_angles : List[float]
+        A list of rotation angles (in degrees) around the z-axis. Rotate each velocety vector
+        around the normal vector of the surface.
+    
+    additive_hight : float
+        The z-height above the surface where the impacting atom will be initially placed.
+    
+    velocitie : float
+        Absolute velocity in [m/s].
+    
+    n_conf_per_dist : List[int]
+        Number of configurations to generate per spatial direction (a, b), representing 
+        how many unique impact positions are sampled in each in-plane lattice direction.
+    
+    cell_fraction : List[float]
+        Fractions of the unit cell vectors a and b that define the region in which impact 
+        positions are sampled.
+    
+    impact_position : Optional[List[float]]
+        Fixed 2D (x, y) coordinates of the impact point. If None, random positions are sampled 
+        within the specified `cell_fraction` region.
+    
+    seed : int
+        Random seed for reproducible position sampling when `impact_position` is not provided.
+
+    """
 
     symbol: str = zntrack.params()
-    y_rotation_angles: typing.List[float] = zntrack.params()
-    z_rotation_angles: typing.List[float] = zntrack.params()
+    incoming_angel: typing.List[float] = zntrack.params()
+    z_angles: typing.List[float] = zntrack.params()
     additive_hight: float = zntrack.params()  # np.array([0., 0., 8.0*Ang,])
-    velocitie: typing.List[float] = zntrack.params()  # np.array([0., 0., -8000.0*m/s,])
+    velocitie: float = zntrack.params()  # np.array([0., 0., -8000.0*m/s,])
     n_conf_per_dist: typing.List[int] = zntrack.params()  # (5, 5)
     cell_fraction: typing.List[float] = zntrack.params()  # [1, 1]
     impact_position: typing.List[float] = zntrack.params(None)  # np.array([0., 0.])
@@ -252,9 +291,9 @@ class PosVeloRotation(base.ProcessSingleAtom):
 
     def run(self) -> None:
         np.random.seed(self.seed)
-        self.y_rotation_angles = np.array(self.y_rotation_angles)
-        self.z_rotation_angles = np.array(self.z_rotation_angles)
-        self.velocitie = np.array(self.velocitie)
+        self.incoming_angel = np.array(self.incoming_angel)
+        self.z_angles = np.array(self.z_angles)
+        self.velocitie = np.array([0., 0., self.velocitie])
 
         atoms = self.get_data()
         cell = atoms.cell
@@ -290,8 +329,8 @@ class PosVeloRotation(base.ProcessSingleAtom):
 
         structures = []
 
-        for z_angle in self.z_rotation_angles:
-            for y_angle in self.y_rotation_angles:
+        for z_angle in self.z_angles:
+            for y_angle in self.incoming_angel:
                 if self.impact_position is None:
                     position = np.array([0, 0, self.additive_hight])
                     a_scaling = np.random.uniform(0, 1, self.n_conf_per_dist[0])
@@ -362,14 +401,6 @@ def delete_reflected_atoms(atoms, cutoff_plane):
     return frames
 
 
-def filter_no_neighbor_structures(frames):
-    new_frames = []
-    for frame in frames:
-        if np.any(frame.calc.results['forces_uncertainty'] > 1e-4):
-            new_frames.append(frame)
-        
-    return new_frames
-
 def map_atoms(frames):
     for frame in frames:
         frame.wrap()
@@ -378,12 +409,30 @@ def map_atoms(frames):
 
 MODS = {
     "del-reflected-atoms": delete_reflected_atoms,
-    "filter-no-neighbor-structures": filter_no_neighbor_structures,
     "map-atoms-to-box": map_atoms,
 }
 
 
 class ModFrames(base.ProcessAtoms):
+    """
+    Apply structural modifications to a set of frames.
+
+    This class provides a unified interface for applying atom-level transformations 
+    such as:
+        - deleting reflected atoms
+        - mapping atoms into the simulation cell
+        
+    Attributes:
+    -----------
+    moddification : str
+        The name of the modification to apply.
+            - del-reflected-atoms
+            - map-atoms-to-box
+    
+    run_kwargs : dict
+        Keyword arguments passed directly to the corresponding modification function.
+    """
+    
     moddification: str = zntrack.params()
     run_kwargs: dict = zntrack.params()
 

@@ -3,7 +3,7 @@ from .utils import PlotProperties, SafeSelection
 from .calculators import CP2KSinglePoint, MaceCalc, PlumedCalc
 from .configuration_modification import (
     ModFrames,
-    PosVeloRotation,
+    AddImpactingAtom,
     SurfaceRasterMetrics,
     SurfaceRasterScan,
 )
@@ -22,7 +22,7 @@ __all__ = [
     "ModFrames",
     "SurfaceRasterScan",
     "SurfaceRasterMetrics",
-    "PosVeloRotation",
+    "AddImpactingAtom",
     # Filter
     "PropertyFilter",
     "NoNeighborFilter",

@@ -12,6 +12,7 @@ import surface_nodes.utils as utils
 
 class PropertyFilter(base.IPSNode):
     data: list[ase.Atoms] = zntrack.deps()
+    model: models.MLModel = zntrack.deps(None)
     reference: str = zntrack.params("energy")
     cutoffs: t.Union[t.List[float]] = zntrack.params()
     direction: t.Literal["above", "below", "both"] = zntrack.params("both")
@@ -50,10 +51,16 @@ class PropertyFilter(base.IPSNode):
             return np.array(inputs)
 
     def run(self) -> t.List[int]:
-        values = [atoms.calc.results[self.reference] for atoms in self.data]
-        values = self.pad_list(values)
+        
+        if self.model:
+            calc = self.model.get_calculator()
+            pred_atoms = calc.batch_eval(self.data)
+        else:
+            pred_atoms = [atoms for atoms in self.data]
             
-        print(values.shape)
+        values = [atoms.calc.results[self.reference] for atoms in pred_atoms]
+        values = self.pad_list(values)
+
         if self.dim_reduction is not None:
             reduction_fn = utils.REDUCTIONS[self.dim_reduction]
             values = reduction_fn(values, self.reduction_axis)
@@ -86,7 +93,7 @@ class PropertyFilter(base.IPSNode):
             self.filtered_indices = self.get_selection(pre_selection[sorting_idx])
             selection_idx = np.array(self.filtered_indices)
 
-            values = [atoms.calc.results[self.reference] for atoms in self.data]
+            values = [atoms.calc.results[self.reference] for atoms in pred_atoms]
             values = self.pad_list(values)
 
             if self.dim_reduction is not None:

@@ -1,6 +1,6 @@
 from .mod_frames import (
     ModFrames,
-    PosVeloRotation,
+    AddImpactingAtom,
     SurfaceRasterMetrics,
     SurfaceRasterScan,
 )
@@ -9,5 +9,5 @@ __all__ = [
     "ModFrames",
     "SurfaceRasterScan",
     "SurfaceRasterMetrics",
-    "PosVeloRotation",
+    "AddImpactingAtom",
 ]

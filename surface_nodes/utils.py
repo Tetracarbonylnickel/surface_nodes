@@ -26,15 +26,12 @@ def check_dimension(values):
             "use mean or max to get (n_structures,) shape."
         )
 
-
 REDUCTIONS = {
     "mean": mean_reduction,
     "max": max_reduction,
     'min': min_reduction,
     'flatten': flatten_r,
 }
-
-
 
 class PlotProperties(base.IPSNode):
     data: list[ase.Atoms] = zntrack.deps()
