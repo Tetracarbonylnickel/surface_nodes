@@ -55,7 +55,7 @@ class PlotProperties(base.IPSNode):
         plot_structure_property([frame.calc.results["energy"] for frame in frames], 'energy', self.energy_img)
         plot_cartesian_property([frame.calc.results["forces"] for frame in frames], 'forces', self.dim_reduction, self.forces_img)
 
-        if 'energy_uncertainty' in frames[0].calc.results.keys:
+        if 'energy_uncertainty' in frames[0].calc.results.keys():
             plot_structure_property(
                 [frame.calc.results["energy_uncertainty"] for frame in frames],
                 'energy_uncertainty',
@@ -64,7 +64,7 @@ class PlotProperties(base.IPSNode):
         else:
             plot_structure_property([frame.calc.results["energy"] for frame in frames], 'energy', self.energy_uncertainty_img)
             
-        if 'energy_uncertainty' in frames[0].calc.results.keys:
+        if 'energy_uncertainty' in frames[0].calc.results.keys():
             plot_cartesian_property(
                 [frame.calc.results["forces_uncertainty"] for frame in frames],
                 'forces_uncertainty',
